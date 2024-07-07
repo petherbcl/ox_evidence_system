@@ -1,0 +1,1 @@
+if Config.Framework~= 'esx' then return end
