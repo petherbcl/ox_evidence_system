@@ -5,7 +5,7 @@ local evidenceList = {}
 local casingEvidence={}
 local bulletholeEvidence={}
 local vehicleFragmentEvidence={}
-
+local bloodEvidence={}
 --------------------------------------------
 -- LOCAL FUNCTIONS
 --------------------------------------------
@@ -30,39 +30,44 @@ end
 --------------------------------------------
 -- EVENTS
 --------------------------------------------
-RegisterNetEvent(GetCurrentResourceName()..':server:CreateEvidence',function (type, weapon, coords, currentTime, pedcoords, heading, entityHit)
+RegisterNetEvent(GetCurrentResourceName()..':server:CreateEvidence',function (type, data)
     local source = source
     local evidence = {
         type = type,
-        coords = coords,
-        timestamp = currentTime,
+        coords = data.evidence_coords,
+        timestamp = data.currentTime,
         identifier = getPlayerIdentifier(source),
     }
 
     if type == 'casing' then
-        evidence.casingType = weapon.ammo
-        if weapon.metadata and weapon.metadata ~= '' then
-            evidence.serial = weapon.metadata.serial
+        evidence.casingType = data.weapon.ammo
+        if data.weapon.metadata and data.weapon.metadata ~= '' then
+            evidence.serial = data.weapon.metadata.serial
         end
     elseif type == 'bullethole' then
-        evidence.bulletType = weapon.ammo
-        evidence.pedCoords = vector4(pedcoords.x,pedcoords.y,pedcoords.z,heading)
-        if weapon.metadata and weapon.metadata ~= '' then
-            evidence.serial = weapon.metadata.serial
+        evidence.bulletType = data.weapon.ammo
+        evidence.pedCoords = vector4(data.pedcoords.x,data.pedcoords.y,data.pedcoords.z,data.heading)
+        if data.weapon.metadata and data.weapon.metadata ~= '' then
+            evidence.serial = data.weapon.metadata.serial
         end
     elseif type == 'vehicleFragment' then
-        evidence.bulletType = weapon.ammo
-        evidence.pedCoords = vector4(pedcoords.x,pedcoords.y,pedcoords.z,heading)
-        if weapon.metadata and weapon.metadata ~= '' then
-            evidence.serial = weapon.metadata.serial
+        evidence.bulletType = data.weapon.ammo
+        evidence.pedCoords = vector4(data.pedcoords.x,data.pedcoords.y,data.pedcoords.z,data.heading)
+        if data.weapon.metadata and data.weapon.metadata ~= '' then
+            evidence.serial = data.weapon.metadata.serial
         end
-        local vehInfo = lib.callback.await(GetCurrentResourceName()..':GetVehicleInfo', source, entityHit)
+        local vehInfo = lib.callback.await(GetCurrentResourceName()..':GetVehicleInfo', source, data.entityHit)
         if vehInfo then
             evidence.color = vehInfo.color
             evidence.model = vehInfo.model
             evidence.modelHash = vehInfo.modelHash
         end
-
+    elseif type == 'blood' then
+        evidence.bloodType = data.bloodType
+        evidence.melee = data.weapon.melee
+        if data.weapon.metadata and data.weapon.metadata ~= '' then
+            evidence.serial = data.weapon.metadata.serial
+        end
     end
 
     local evidenceId = generateEvidenceId()
@@ -78,5 +83,7 @@ RegisterNetEvent(GetCurrentResourceName()..':server:CreateEvidence',function (ty
         bulletholeEvidence[evidenceId] = evidence
     elseif type == 'vehicleFragment' then
         vehicleFragmentEvidence[evidenceId] = evidence
+    elseif type == 'blood' then
+        bloodEvidence[evidenceId] = evidence
     end
 end)

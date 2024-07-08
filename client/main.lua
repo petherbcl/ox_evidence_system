@@ -3,9 +3,12 @@
 --------------------------------------------
 local timer = {}
 local EvidenceDelay = {
-    Evidence = 250
+    Evidence = 250,
+    Blood = 250
 }
 
+local casingEvidence = {}
+local bulletholeEvidence = {}
 local casingEvidence = {}
 
 PlayerData = {
@@ -63,7 +66,7 @@ local function WaitEvidence(type, func, ...)
     end
 end
 
-local function DropCasing(weaponUsed, ped, currentTime)
+local function CreateCasingEvidence(weaponUsed, ped, currentTime)
     if IsPedSwimming(ped) then return end
 
     local randX = math.random() + math.random(-1, 1)
@@ -71,22 +74,61 @@ local function DropCasing(weaponUsed, ped, currentTime)
     local coords = GetOffsetFromEntityInWorldCoords(ped, randX, randY, 0)
     local _, groundz = GetGroundZFor_3dCoord(coords.x, coords.y, coords.z, true)
     coords = vector3(coords.x, coords.y, groundz)
-    TriggerServerEvent(GetCurrentResourceName()..':server:CreateEvidence', 'casing', weaponUsed, coords, currentTime)
+
+    local data = {
+        weapon = weaponUsed,
+        evidence_coords = coords,
+        currentTime = currentTime
+    }
+    TriggerServerEvent(GetCurrentResourceName()..':server:CreateEvidence', 'casing', data)
 
     DrawMarkerEvidence(coords)
 end
 
-local function CreateBulletHole(weaponUsed, raycastcoords, pedcoords, heading, currentTime, entityHit)
+local function CreateBulletHoleEvidence(weaponUsed, raycastcoords, pedcoords, heading, currentTime, entityHit)
     if raycastcoords then
         if GetEntityType(entityHit) == 2 then
             local _, groundz = GetGroundZFor_3dCoord(raycastcoords.x, raycastcoords.y, raycastcoords.z, true)
             local coords = vector3(raycastcoords.x, raycastcoords.y, groundz)
-            TriggerServerEvent(GetCurrentResourceName()..':server:CreateEvidence', 'vehicleFragment', weaponUsed, coords, currentTime, pedcoords, heading, NetworkGetNetworkIdFromEntity(entityHit))
+            local data = {
+                weapon = weaponUsed,
+                evidence_coords = coords,
+                currentTime = currentTime,
+                pedcoords = pedcoords,
+                heading = heading,
+                entityHit = NetworkGetNetworkIdFromEntity(entityHit)
+            }
+            TriggerServerEvent(GetCurrentResourceName()..':server:CreateEvidence', 'vehicleFragment', data)
             DrawMarkerEvidence(coords)
-        else
-            TriggerServerEvent(GetCurrentResourceName()..':server:CreateEvidence', 'bullethole', weaponUsed, raycastcoords, currentTime, pedcoords, heading)
+        elseif GetEntityType(entityHit) == 3 then
+            local data = {
+                weapon = weaponUsed,
+                evidence_coords = raycastcoords,
+                currentTime = currentTime,
+                pedcoords = pedcoords,
+                heading = heading
+            }
+            TriggerServerEvent(GetCurrentResourceName()..':server:CreateEvidence', 'bullethole', data)
             DrawMarkerEvidence(raycastcoords)
         end
+    end
+end
+
+local function CreateBloodEvidence(weaponUsed, victimCoords, pedcoords, currentTime, entityHit)
+    if victimCoords then
+        local _, groundz = GetGroundZFor_3dCoord(victimCoords.x, victimCoords.y, victimCoords.z, true)
+        local coords = vector3(victimCoords.x, victimCoords.y, groundz)
+
+        local data = {
+            weapon = weaponUsed,
+            evidence_coords = coords,
+            currentTime = currentTime,
+            entityHit = NetworkGetNetworkIdFromEntity(entityHit),
+            bloodType = getEntityBloodType(entityHit),
+        }
+
+        TriggerServerEvent(GetCurrentResourceName()..':server:CreateEvidence', 'blood', data)
+        DrawMarkerEvidence(coords)
     end
 end
 --------------------------------------------
@@ -111,12 +153,13 @@ end)
 RegisterNetEvent(GetCurrentResourceName()..':client:CreateEvidence', function (endevidenceId, evidence)
     if evidence.type == 'casing' then
         casingEvidence[endevidenceId] = evidence
+    elseif evidence.type == 'bullethole' then
+    elseif evidence.type == 'vehicleFragment' then
     end
 end)
 
 AddEventHandler('CEventGunShot', function(entities, eventEntity, data)
     WaitEvidence('Evidence', function ()
-        --print('CEventGunShot',json.encode(entities), eventEntity, json.encode(data))
         if eventEntity == cache.ped then
             if PlayerData.job.name == Config.PoliceJob and not Config.PoliceEvidence then return end
 
@@ -127,11 +170,10 @@ AddEventHandler('CEventGunShot', function(entities, eventEntity, data)
                 local weaponUsed = exports.ox_inventory:getCurrentWeapon()
                 if not Config.WhitelistWeapon[weaponUsed.hash] then
                     local currentTime = GetGameTimer()
-                    
 
                     DrawMarkerEnt(raycastcoords)
-                    DropCasing(weaponUsed, eventEntity, currentTime)
-                    CreateBulletHole(weaponUsed, raycastcoords, pedcoords, heading, currentTime, entityHit, r, g, b)
+                    CreateCasingEvidence(weaponUsed, eventEntity, currentTime)
+                    CreateBulletHoleEvidence(weaponUsed, raycastcoords, pedcoords, heading, currentTime, entityHit, r, g, b)
                 end
             end
         end
@@ -142,12 +184,20 @@ AddEventHandler('CEventGunShotBulletImpact', function(entities, eventEntity, dat
     --print('CEventGunShotBulletImpact',json.encode(entities), eventEntity, json.encode(data))
 end)
 
-AddEventHandler('CEventNetworkEntityDamage', function(entities, eventEntity, data)
-    --print('CEventEntityDamaged',json.encode(entities), eventEntity, json.encode(data))
-end)
-
 AddEventHandler('gameEventTriggered',function(name,args)
     if name == 'CEventNetworkEntityDamage' then
-        local victim, attacker, victimDied, weaponHash, isMelee = args[1], args[2], args[6], args[7], args[12]
+        WaitEvidence('Blood', function ()
+            local victim, attacker, victimDied, weaponHash, isMelee = args[1], args[2], args[6], args[7], args[12]
+            if attacker == cache.ped then
+                if IsPedAPlayer(victim) or Config.BloodNPC then
+                    local victimCoords = GetEntityCoords(victim)
+                    local weaponUsed = exports.ox_inventory:getCurrentWeapon()
+                    if not Config.WhitelistWeapon[weaponUsed.hash] then
+                        local currentTime = GetGameTimer()
+                        CreateBloodEvidence(weaponUsed, victimCoords, pedcoords, currentTime, victim)
+                    end
+                end
+            end
+        end)
     end
 end)

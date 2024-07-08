@@ -25,3 +25,11 @@ TriggerServerEvent(GetCurrentResourceName()..":server:RequestPlayerIdent")
 function GetJobInfo()
     return PlayerData.job
 end
+
+function getEntityBloodType(entity)
+    if IsPedAPlayer(entity) then
+        return lib.callback.await(GetCurrentResourceName()..':standalone:server:GetPlayerBloodType', nil, GetPlayerServerId(NetworkGetPlayerIndexFromPed(entity)))
+    else
+        return nil
+    end
+end

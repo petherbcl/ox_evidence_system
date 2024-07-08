@@ -27,5 +27,7 @@ Config.WhitelistWeapon = {
 }
 
 -- POLICE JOB
-Config.PoliceJob = 'DPCNX'
+Config.PoliceJob = 'DPCNX' -- JOB PERMISSION
 Config.PoliceEvidence = true -- POLICE WILL ALSO LEAVE EVIDENCE
+
+Config.BloodNPC = false -- Allow NPC leat blood evidence

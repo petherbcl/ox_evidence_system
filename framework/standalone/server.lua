@@ -106,6 +106,14 @@ function getPlayerIdentifier(source)
     return vRP.getUserId(source)
 end
 
+lib.callback.register(GetCurrentResourceName()..':standalone:server:GetPlayerBloodType', function(source, playerSource)
+    local user_id = vRP.getUserId(playerSource)
+    if user_id then
+        local identity = vRP.userIdentity(user_id)
+        return identity.blood
+    end
+    return nil
+end)
 --------------------------------------------
 -- EVENTS
 --------------------------------------------
