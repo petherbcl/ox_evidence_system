@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="https://site-assets.fontawesome.com/releases/v6.5.1/css/all.css">
+    <link rel="stylesheet" href="style.css" type="text/css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+
+<body class="isDisable">
+
+    <div class="camera_container isDisable" id="camera">
+        <div class="camera_nui">
+            <div class="horizontal_frame">
+                <div class="border_left"></div>
+                <div class="border_right"></div>
+            </div>
+            <div class="vertical_frame">
+                <div class="border_top"></div>
+                <div class="border_bottom"></div>
+            </div>
+
+            <div class="top_info">
+                <div class="batery">
+                    <i class="fa-regular fa-battery-three-quarters"></i>
+                    <span>50%</span>
+                </div>
+                <div class="flash">
+                    <span id="flash_desc">OFF</span>
+                    <i class="fa-solid fa-bolt" id="flash_icon"></i>
+                </div>
+            </div>
+
+            <div class="bottom_info">
+                <div class="shutter_info">
+                    <span>FULL HD</span><span>60 FPS</span><span>ISO200</span><span>1/250</span>
+                </div>
+                <div class="zoom-info">
+                    <i class="fa-solid fa-magnifying-glass-plus"></i>
+                    <span id="zoom">1X ZOOM</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="photo_container isDisable" id="photo">
+
+        <div class="photo_display">
+            <div class="photo" id="photo_img" style="background-image: url()"></div>
+            <div class="photo_details" id="photo_details"></div>
+        </div>
+    </div>
+
+    <!-- JQUERY -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+        integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+
+    <script src="script.js" type="text/javascript"></script>
+</body>
+
+</html>

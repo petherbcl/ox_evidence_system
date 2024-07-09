@@ -6,6 +6,8 @@ local casingEvidence={}
 local bulletholeEvidence={}
 local vehicleFragmentEvidence={}
 local bloodEvidence={}
+
+CameraEntitys = {}
 --------------------------------------------
 -- LOCAL FUNCTIONS
 --------------------------------------------
@@ -26,10 +28,44 @@ end
 --------------------------------------------
 -- FUNCTIONS
 --------------------------------------------
+lib.callback.register(GetCurrentResourceName()..':server:SpawnProp', function(source, propHash, cds)
+    local object = CreateObjectNoOffset(propHash,cds.x,cds.y,cds.z,false,true,false)
+    while not DoesEntityExist(object) do
+        Wait(50)
+    end
+    CameraEntitys[source] = NetworkGetNetworkIdFromEntity(object)
+    SetEntityDistanceCullingRadius(object,999999999.0)
+    return CameraEntitys[source]
+end)
 
+lib.callback.register(GetCurrentResourceName()..':server:DeleteCam', function(source)
+    DeleteEntity(NetworkGetEntityFromNetworkId(CameraEntitys[source]))
+    CameraEntitys[source] = nil
+end)
+
+lib.callback.register(GetCurrentResourceName()..':server:CreatePhotoItem', function(source, url)
+    local source = source
+    exports.ox_inventory:AddItem(source, Config.photoItem, 1, {url=url, date = os.date('%Y/%m/%d %H:%M:%S'), identification = getPlayerIdentifier(source), description = 'Date: '..os.date('%Y/%m/%d %H:%M:%S')..'\nIdentification: '..getPlayerName(source)})
+end)
 --------------------------------------------
 -- EVENTS
 --------------------------------------------
+AddEventHandler('onResourceStop', function(resourceName)
+    if (GetCurrentResourceName() == resourceName) then
+        for i, netId in pairs(CameraEntitys) do
+            DeleteEntity(NetworkGetEntityFromNetworkId(netId))
+            CameraEntitys[i] = nil
+        end
+    end
+end)
+AddEventHandler("playerDropped",function()
+    local source = source
+    if CameraEntitys[source] then
+        DeleteEntity(NetworkGetEntityFromNetworkId(CameraEntitys[source]))
+        CameraEntitys[source] = nil
+    end
+end)
+
 RegisterNetEvent(GetCurrentResourceName()..':server:CreateEvidence',function (type, data)
     local source = source
     local evidence = {

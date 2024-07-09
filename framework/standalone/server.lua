@@ -87,14 +87,13 @@ local function updatePlayerData(source, user_id)
         characterName = GetCharacterName(source, user_id),
         job = getUserJobs(source, user_id),
     }
-
-    TriggerClientEvent(GetCurrentResourceName()..":client:RequestPlayerIdent",source, PlayerData)
+    TriggerClientEvent(GetCurrentResourceName()..":standalone:client:RequestPlayerIdent",source, PlayerData)
 end
 
 --------------------------------------------
 -- FUNCTIONS
 --------------------------------------------
-lib.callback.register(GetCurrentResourceName()..':server:RequestPlayerIdent', function(source)
+RegisterNetEvent(GetCurrentResourceName()..':standalone:server:RequestPlayerIdent', function()
     local source = source
     local user_id = vRP.getUserId(source)
     if user_id then
@@ -104,6 +103,16 @@ end)
 
 function getPlayerIdentifier(source)
     return vRP.getUserId(source)
+end
+
+function getPlayerName(source)
+    local user_id = vRP.getUserId(source)
+    local identity = vRP.userIdentity(user_id)
+    local name = ''
+    if identity then
+        name = identity.name.." "..identity.name2
+    end
+    return name
 end
 
 lib.callback.register(GetCurrentResourceName()..':standalone:server:GetPlayerBloodType', function(source, playerSource)

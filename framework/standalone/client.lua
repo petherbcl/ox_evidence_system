@@ -17,10 +17,11 @@ PlayerData = {
     }
 }
 
-RegisterNetEvent(GetCurrentResourceName()..":client:RequestPlayerIdent", function(playerData)
+RegisterNetEvent(GetCurrentResourceName()..":standalone:client:RequestPlayerIdent", function(playerData)
     PlayerData = playerData
 end)
-TriggerServerEvent(GetCurrentResourceName()..":server:RequestPlayerIdent")
+
+TriggerServerEvent(GetCurrentResourceName()..':standalone:server:RequestPlayerIdent')
 
 function GetJobInfo()
     return PlayerData.job
