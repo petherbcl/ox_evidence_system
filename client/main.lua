@@ -7,13 +7,15 @@ local showMarker = false
 local timer = {}
 local EvidenceDelay = {
     Evidence = 250,
-    Blood = 250
+    Blood = 250,
+    Ffootprint = 500,
 }
 
 local casingEvidence = {}
 local bulletholeEvidence = {}
 local vehicleFragmentEvidence = {}
 local bloodEvidence = {}
+local footprintEvidence = {}
 
 PlayerData = {
     characterName = '',
@@ -46,41 +48,21 @@ local function DrawMarkerEnt(coords)
         end
     end)
 end
-local function DrawMarkerEvidence(coords)
-    CreateThread(function()
-        while true do
-            --[[
-            DrawMarker(28, coords.x, coords.y, coords.z,0.0, 0.0, 0.0,0.0, 0.0, 0.0,
-                0.3, 0.3, 0.3,
-                255, 0, 0,75,
-                false,false,2,false,0, 0, 0)
-            ]]
 
-            SetDrawOrigin(coords.x, coords.y, coords.z, 0)
-            while not HasStreamedTextureDictLoaded('blooddrops') do
-                Wait(10)
-                RequestStreamedTextureDict('blooddrops', true)
-            end
-            DrawSprite('blooddrops', 'blooddrops', 0, 0, 0.02, 0.035, 0, 255, 255, 255, 255)
 
-            Wait(1)
-        end
-    end)
+local function DrawEvidenceMarker(type, evidence)
+    print(type)
+    while not HasStreamedTextureDictLoaded(type) do
+        Wait(10)
+        RequestStreamedTextureDict(type, true)
+    end
+
+    SetDrawOrigin(evidence.coords.x, evidence.coords.y, evidence.coords.z, 0)
+    DrawSprite(type, type, 0, 0, 0.04, 0.055, 0, 255, 255, 255, 255)
+    if Config.ShowShootersLine and evidence.pedCoords then
+        DrawLine(evidence.coords.x, evidence.coords.y, evidence.coords.z, evidence.pedCoords.x, evidence.pedCoords.y, evidence.pedCoords.z, 255, 0, 0, 255)
+    end
 end
-
-local function DrawEvidenceMarker(type, coords)
-    CreateThread(function()
-        while not HasStreamedTextureDictLoaded(type) do
-            Wait(10)
-            RequestStreamedTextureDict(type, true)
-        end
-
-        SetDrawOrigin(coords.x, coords.y, coords.z, 0)
-        DrawSprite(type, type, 0, 0, 0.04, 0.055, 0, 255, 255, 255, 255)
-        Wait(1)
-    end)
-end
-
 
 
 local function WaitEvidence(type, func, ...)
@@ -155,6 +137,16 @@ local function CreateBloodEvidence(weaponUsed, victimCoords, pedcoords, currentT
     end
 end
 
+local function CreateFfootprintEvidence(ped, pedcoords, currentTime)
+    if IsPedSwimming(ped) then return end
+    local _, groundz = GetGroundZFor_3dCoord(pedcoords.x, pedcoords.y, pedcoords.z, true)
+    local data = {
+        evidence_coords = vector3(pedcoords.x, pedcoords.y, groundz),
+        currentTime = currentTime
+    }
+    TriggerServerEvent(GetCurrentResourceName()..':server:CreateEvidence', 'footprint', data)
+end
+
 local function ShowEvidenceMarker(type, maxDist)
     local list
     if type == 'casing' then
@@ -165,16 +157,20 @@ local function ShowEvidenceMarker(type, maxDist)
         list = vehicleFragmentEvidence
     elseif type == 'blood' then
         list = bloodEvidence
+    elseif type == 'footprint' then
+        list = footprintEvidence
     end
 
     if list then
         CreateThread(function()
             while showMarker do
                 local pos = GetEntityCoords(PlayerPedId(), true)
-                for _, evidence in pairs(list) do
+                for evidenceId, evidence in pairs(list) do
                     local dist = #(pos - vector3(evidence.coords))
                     if dist > 1.1 and dist < maxDist then
-                        DrawEvidenceMarker(type, evidence.coords)
+                        DrawEvidenceMarker(type, evidence)
+                    elseif dist < 1.0 then
+
                     end
                 end
                 Wait(0)
@@ -210,6 +206,22 @@ RegisterNetEvent(GetCurrentResourceName()..':client:CreateEvidence', function (e
         vehicleFragmentEvidence[endevidenceId] = evidence
     elseif evidence.type == 'blood' then
         bloodEvidence[endevidenceId] = evidence
+    elseif evidence.type == 'footprint' then
+        footprintEvidence[endevidenceId] = evidence
+    end
+end)
+
+RegisterNetEvent(GetCurrentResourceName()..':client:UpdateEvidenceListType', function (type, evidenceList)
+    if type == 'casing' then
+        casingEvidence = evidenceList
+    elseif type == 'bullethole' then
+        bulletholeEvidence = evidenceList
+    elseif type == 'vehicleFragment' then
+        vehicleFragmentEvidence = evidenceList
+    elseif type == 'blood' then
+        bloodEvidence = evidenceList
+    elseif type == 'footprint' then
+        footprintEvidence = evidenceList
     end
 end)
 
@@ -235,9 +247,18 @@ AddEventHandler('CEventGunShot', function(entities, eventEntity, data)
     end)    
 end)
 
-AddEventHandler('CEventGunShotBulletImpact', function(entities, eventEntity, data)
-    --print('CEventGunShotBulletImpact',json.encode(entities), eventEntity, json.encode(data))
-end)
+if Config.AllowFootprint then
+    AddEventHandler('CEventFootStepHeard', function(witnesses, eventEntity)
+        WaitEvidence('Ffootprint', function ()
+            if eventEntity == cache.ped then
+                if PlayerData.job.name == Config.PoliceJob and not Config.PoliceEvidence then return end
+                local pedcoords = GetEntityCoords(eventEntity)
+                local currentTime = GetGameTimer()
+                CreateFfootprintEvidence(eventEntity, pedcoords, currentTime)
+            end
+        end)
+    end)
+end
 
 AddEventHandler('gameEventTriggered',function(name,args)
     if name == 'CEventNetworkEntityDamage' then
@@ -271,6 +292,7 @@ lib.onCache('weapon', function(value)
                                 ShowEvidenceMarker('bullethole',Config.PoliceEvidenceMaxDist)
                                 ShowEvidenceMarker('vehicleFragment',Config.PoliceEvidenceMaxDist)
                                 ShowEvidenceMarker('blood',Config.PoliceEvidenceMaxDist)
+                                ShowEvidenceMarker('footprint',Config.PoliceEvidenceMaxDist)
                             end
                         else
                             showMarker = false
@@ -284,6 +306,7 @@ lib.onCache('weapon', function(value)
                 ShowEvidenceMarker('bullethole',Config.PoliceEvidenceMaxDist)
                 ShowEvidenceMarker('vehicleFragment',Config.PoliceEvidenceMaxDist)
                 ShowEvidenceMarker('blood',Config.PoliceEvidenceMaxDist)
+                ShowEvidenceMarker('footprint',Config.PoliceEvidenceMaxDist)
             end
         end
     else
@@ -419,6 +442,7 @@ local function StartCamera()
             ShowEvidenceMarker('bullethole',Config.camEvidenceMaxDistance)
             ShowEvidenceMarker('vehicleFragment',Config.camEvidenceMaxDistance)
             ShowEvidenceMarker('blood',Config.camEvidenceMaxDistance)
+            ShowEvidenceMarker('footprint',Config.camEvidenceMaxDistance)
         end
 
         SendNUIMessage({action = "startCamera"})

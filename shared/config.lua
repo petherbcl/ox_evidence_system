@@ -1,17 +1,3 @@
---[[
-    estrutura evidence
-
-    {
-        TYPE:
-        CDS:
-        USER_IDENTIFIER:
-
-        BLOODTYPE:
-        WEAPON_TYPE:
-        WEAPON_SERIAL:
-    }
-]]
-
 Config = {}
 
 Config.Framework = 'standalone'
@@ -33,7 +19,15 @@ Config.PoliceShowEvidenceWeapom = `WEAPON_FLASHLIGHT` -- FLASHLIGHT TO SHOW EVID
 Config.PoliceShowEvidenceWeapomAim = true -- NEED TO AIM WEAPON TO SHOW EVIDENCE
 Config.PoliceEvidenceMaxDist = 5.0 -- MAX DISTANCE TO SHOW EVIDENCE WHEN USING FLASHLIGHT
 
+-- EVIDENCE
 Config.BloodNPC = false -- Allow NPC leat blood evidence
+Config.AllowFootprint = false -- Allow Player Footprint evidence
+Config.ShowShootersLine = true -- SHOW SHOT LINE
+Config.DegradeTime = 5 -- EACH MINUTES THE EVIDENCE DEGRADE 1%
+Config.DegradeLevel = {
+    lowQuality = 90, -- lowQuality degrade will not be able to connect evidence
+    mediumQuality = 50 -- mediumQuality will have 50% change colect evidence
+}
 
 -- CAMERA
 Config.FiveManageImgToken = 'SJ52pa9Z6e7VpVuNKkZaU5PSfONlcVgO'
