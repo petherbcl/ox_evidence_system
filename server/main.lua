@@ -1,3 +1,4 @@
+lib.locale(Config.Lang)
 --------------------------------------------
 -- VARIABLES
 --------------------------------------------
@@ -13,11 +14,40 @@ CameraEntitys = {}
 -- LOCAL FUNCTIONS
 --------------------------------------------
 local function saveEvidenceList()
+    SaveResourceFile(GetCurrentResourceName(), "server/evidence.json", json.encode(evidenceList, { indent = true }), -1)
+end
+
+local function loadEvidenceList()
     local LoadFile = LoadResourceFile(GetCurrentResourceName(), "./server/evidence.json")
-    if LoadFile then
-        SaveResourceFile(GetCurrentResourceName(), "server/evidence.json", json.encode(evidenceList, { indent = true }), -1)
+    if LoadFile and LoadFile~=''  then
+        local evidenceL = lib.table.deepclone(json.decode(LoadFile))
+            if evidenceL then
+                for evidenceId, evidence in pairs(evidenceL) do
+                    local evidenceType = evidence.type
+                    if evidenceType == 'casing' then
+                        casingEvidence[evidenceId] = evidence
+                    elseif evidenceType == 'bullethole' then
+                        bulletholeEvidence[evidenceId] = evidence
+                    elseif evidenceType == 'vehicleFragment' then
+                        vehicleFragmentEvidence[evidenceId] = evidence
+                    elseif evidenceType == 'blood' then
+                        bloodEvidence[evidenceId] = evidence
+                    elseif evidenceType == 'footprint' then
+                        footprintEvidence[evidenceId] = evidence
+                    end
+                end
+
+                evidenceList = evidenceL
+
+                TriggerClientEvent(GetCurrentResourceName()..':client:UpdateEvidenceListType', -1, 'casing', casingEvidence)
+                TriggerClientEvent(GetCurrentResourceName()..':client:UpdateEvidenceListType', -1, 'bullethole', bulletholeEvidence)
+                TriggerClientEvent(GetCurrentResourceName()..':client:UpdateEvidenceListType', -1, 'vehicleFragment', vehicleFragmentEvidence)
+                TriggerClientEvent(GetCurrentResourceName()..':client:UpdateEvidenceListType', -1, 'blood', bloodEvidence)
+                TriggerClientEvent(GetCurrentResourceName()..':client:UpdateEvidenceListType', -1, 'footprint', footprintEvidence)
+            end
     end
 end
+loadEvidenceList()
 
 local function generateEvidenceId()
     local evidenceId = math.random(1000, 9999)
@@ -46,7 +76,11 @@ end)
 
 lib.callback.register(GetCurrentResourceName()..':server:CreatePhotoItem', function(source, url)
     local source = source
-    exports.ox_inventory:AddItem(source, Config.photoItem, 1, {url=url, date = os.date('%Y/%m/%d %H:%M:%S'), identification = getPlayerIdentifier(source), description = 'Date: '..os.date('%Y/%m/%d %H:%M:%S')..'\nIdentification: '..getPlayerName(source)})
+    GiveItem(source,Config.photoItem, 1, {url=url, date = os.date('%Y/%m/%d %H:%M:%S'), identification = getPlayerIdentifier(source), description = 'Date: '..os.date('%Y/%m/%d %H:%M:%S')..'\nIdentification: '..getPlayerName(source)})
+end)
+
+lib.callback.register(GetCurrentResourceName()..':server:CheckHasItem', function(source, typeEvidence)
+    return HasItems(source, Config.EvidenceCollect[typeEvidence].itemNeed)
 end)
 --------------------------------------------
 -- EVENTS
@@ -67,106 +101,169 @@ AddEventHandler("playerDropped",function()
     end
 end)
 
-RegisterNetEvent(GetCurrentResourceName()..':server:CreateEvidence',function (type, data)
+RegisterNetEvent(GetCurrentResourceName()..':server:CreateEvidence',function (evidenceType, data)
     local source = source
     local evidence = {
-        type = type,
+        type = evidenceType,
         coords = data.evidence_coords,
         timestamp = data.currentTime,
         identifier = getPlayerIdentifier(source),
         degrade = 0
     }
 
-    if type == 'casing' then
+    if evidenceType == 'casing' then
         evidence.casingType = data.weapon.ammo
         if data.weapon.metadata and data.weapon.metadata ~= '' then
             evidence.serial = data.weapon.metadata.serial
         end
-    elseif type == 'bullethole' then
+    elseif evidenceType == 'bullethole' then
         evidence.bulletType = data.weapon.ammo
         evidence.pedCoords = vector4(data.pedcoords.x,data.pedcoords.y,data.pedcoords.z,data.heading)
         if data.weapon.metadata and data.weapon.metadata ~= '' then
             evidence.serial = data.weapon.metadata.serial
         end
-    elseif type == 'vehicleFragment' then
+    elseif evidenceType == 'vehicleFragment' then
         evidence.bulletType = data.weapon.ammo
         evidence.pedCoords = vector4(data.pedcoords.x,data.pedcoords.y,data.pedcoords.z,data.heading)
         if data.weapon.metadata and data.weapon.metadata ~= '' then
             evidence.serial = data.weapon.metadata.serial
         end
-        local vehInfo = lib.callback.await(GetCurrentResourceName()..':GetVehicleInfo', source, data.entityHit)
+        local vehInfo = lib.callback.await(GetCurrentResourceName()..':client:GetVehicleInfo', source, data.entityHit)
         if vehInfo then
             evidence.color = vehInfo.color
             evidence.model = vehInfo.model
             evidence.modelHash = vehInfo.modelHash
         end
-    elseif type == 'blood' then
+    elseif evidenceType == 'blood' then
         evidence.bloodType = data.bloodType
-        evidence.melee = data.weapon.melee
+        evidence.melee = data.weapon.melee==0 and true or false
         if data.weapon.metadata and data.weapon.metadata ~= '' then
             evidence.serial = data.weapon.metadata.serial
         end
-    --elseif type == 'footprint' then
+    --elseif evidenceType == 'footprint' then
     end
 
     local evidenceId = generateEvidenceId()
     evidenceList[evidenceId] = evidence
     saveEvidenceList()
-    --casingEvidence[evidenceId] = evidence
-    --print(json.encode(evidence))
     TriggerClientEvent(GetCurrentResourceName()..':client:CreateEvidence', -1, evidenceId, evidence)
 
-    if type == 'casing' then
+    if evidenceType == 'casing' then
         casingEvidence[evidenceId] = evidence
-    elseif type == 'bullethole' then
+    elseif evidenceType == 'bullethole' then
         bulletholeEvidence[evidenceId] = evidence
-    elseif type == 'vehicleFragment' then
+    elseif evidenceType == 'vehicleFragment' then
         vehicleFragmentEvidence[evidenceId] = evidence
-    elseif type == 'blood' then
+    elseif evidenceType == 'blood' then
         bloodEvidence[evidenceId] = evidence
-    elseif type == 'footprint' then
+    elseif evidenceType == 'footprint' then
         footprintEvidence[evidenceId] = evidence
     end
 end)
 
+RegisterNetEvent(GetCurrentResourceName()..':server:RequestEvidences',function (evidenceType, data)
+    local source = source
+    TriggerClientEvent(GetCurrentResourceName()..':client:UpdateEvidenceListType', source, 'casing', casingEvidence)
+    TriggerClientEvent(GetCurrentResourceName()..':client:UpdateEvidenceListType', source, 'bullethole', bulletholeEvidence)
+    TriggerClientEvent(GetCurrentResourceName()..':client:UpdateEvidenceListType', source, 'vehicleFragment', vehicleFragmentEvidence)
+    TriggerClientEvent(GetCurrentResourceName()..':client:UpdateEvidenceListType', source, 'blood', bloodEvidence)
+    TriggerClientEvent(GetCurrentResourceName()..':client:UpdateEvidenceListType', source, 'footprint', footprintEvidence)
+end)
+
+RegisterNetEvent(GetCurrentResourceName()..':server:CollectEvidence',function (evidenceId)
+    local source = source
+    if evidenceList[evidenceId] then
+        local evidence = evidenceList[evidenceId]
+        RemoveItem(source, Config.EvidenceCollect[evidence.type].itemNeed, 1)
+
+        local ableToCollect = true
+        if evidence.degrade >= Config.DegradeLevel.lowQuality then
+            ableToCollect = false
+        elseif evidence.degrade >= Config.DegradeLevel.mediumQuality then
+            ableToCollect = math.random(0,100) > 50
+        end
+
+        if ableToCollect then
+            local metadata = {
+                coords = evidence.coords,
+                timestamp = evidence.timestamp,
+                identifier = evidence.identifier,
+                casing_type = evidence.casingType,
+                weapon_serial = evidence.serial,
+                bullet_type = evidence.bulletType,
+                color = evidence.color,
+                model = evidence.model,
+                model_hash = evidence.modelHash,
+                blood_type = evidence.bloodType,
+                melee = evidence.melee
+            }
+            GiveItem(source, Config.EvidenceCollect[evidence.type].itemReceive, 1, metadata)
+        else
+            lib.callback.await(GetCurrentResourceName()..':client:Notify', source, 'error', locale('nofitication.cantCollectTitle'), locale('nofitication.cantCollectDesc'))
+        end
+
+        evidenceList[evidenceId] = nil
+        saveEvidenceList()
+        if evidence.type == 'casing' then
+            casingEvidence[evidenceId] = nil
+            TriggerClientEvent(GetCurrentResourceName()..':client:DeleteEvidence', -1, 'casing', evidenceId)
+        elseif evidence.type == 'bullethole' then
+            bulletholeEvidence[evidenceId] = nil
+            TriggerClientEvent(GetCurrentResourceName()..':client:DeleteEvidence', -1, 'bullethole', evidenceId)
+        elseif evidence.type == 'vehicleFragment' then
+            vehicleFragmentEvidence[evidenceId] = nil
+            TriggerClientEvent(GetCurrentResourceName()..':client:DeleteEvidence', -1, 'vehicleFragment', evidenceId)
+        elseif evidence.type == 'blood' then
+            bloodEvidence[evidenceId] = nil
+            TriggerClientEvent(GetCurrentResourceName()..':client:DeleteEvidence', -1, 'blood', evidenceId)
+        elseif evidence.type == 'footprint' then
+            footprintEvidence[evidenceId] = nil
+            TriggerClientEvent(GetCurrentResourceName()..':client:DeleteEvidence', -1, 'footprint', evidenceId)
+        end
+    end
+end)
 
 --------------------------------------------
 -- DEGRADE
 --------------------------------------------
 CreateThread(function ()
     while true do
+        Wait(Config.DegradeTime * 60000)
         local LoadFile = LoadResourceFile(GetCurrentResourceName(), "./server/evidence.json")
         if LoadFile then
             local evidenceL = json.decode(LoadFile)
-            for evidenceId, evidence in pairs(evidenceL) do
-                if not evidence.degrade then evidence.degrade = 0 end
-                evidence.degrade = evidence.degrade + 1
+            if evidenceL then
+                for evidenceId, evidence in pairs(evidenceL) do
+                    local evidenceType = evidence.type
+                    if not evidence.degrade then evidence.degrade = 0 end
+                    evidence.degrade = evidence.degrade + 1
 
-                if evidence.degrade == 100 then
-                    evidence = nil
-                end
+                    if evidence.degrade >= 100 then
+                        evidence = nil
+                    end
 
-                if type == 'casing' then
-                    casingEvidence[evidenceId] = evidence
-                elseif type == 'bullethole' then
-                    bulletholeEvidence[evidenceId] = evidence
-                elseif type == 'vehicleFragment' then
-                    vehicleFragmentEvidence[evidenceId] = evidence
-                elseif type == 'blood' then
-                    bloodEvidence[evidenceId] = evidence
-                elseif type == 'footprint' then
-                    footprintEvidence[evidenceId] = evidence
+                    if evidenceType == 'casing' then
+                        casingEvidence[evidenceId] = evidence
+                    elseif evidenceType == 'bullethole' then
+                        bulletholeEvidence[evidenceId] = evidence
+                    elseif evidenceType == 'vehicleFragment' then
+                        vehicleFragmentEvidence[evidenceId] = evidence
+                    elseif evidenceType == 'blood' then
+                        bloodEvidence[evidenceId] = evidence
+                    elseif evidenceType == 'footprint' then
+                        footprintEvidence[evidenceId] = evidence
+                    end
+                    evidenceL[evidenceId] = evidence
                 end
+                evidenceList = evidenceL
+                SaveResourceFile(GetCurrentResourceName(), "server/evidence.json", json.encode(evidenceList, { indent = true }), -1)
+
+                TriggerClientEvent(GetCurrentResourceName()..':client:UpdateEvidenceListType', -1, 'casing', casingEvidence)
+                TriggerClientEvent(GetCurrentResourceName()..':client:UpdateEvidenceListType', -1, 'bullethole', bulletholeEvidence)
+                TriggerClientEvent(GetCurrentResourceName()..':client:UpdateEvidenceListType', -1, 'vehicleFragment', vehicleFragmentEvidence)
+                TriggerClientEvent(GetCurrentResourceName()..':client:UpdateEvidenceListType', -1, 'blood', bloodEvidence)
+                TriggerClientEvent(GetCurrentResourceName()..':client:UpdateEvidenceListType', -1, 'footprint', footprintEvidence)
             end
-            evidenceList = evidenceL
-            SaveResourceFile(GetCurrentResourceName(), "server/evidence.json", json.encode(evidenceList, { indent = true }), -1)
-
-            TriggerClientEvent(GetCurrentResourceName()..':client:UpdateEvidenceListType', -1, 'casing', casingEvidence)
-            TriggerClientEvent(GetCurrentResourceName()..':client:UpdateEvidenceListType', -1, 'bullethole', bulletholeEvidence)
-            TriggerClientEvent(GetCurrentResourceName()..':client:UpdateEvidenceListType', -1, 'vehicleFragment', vehicleFragmentEvidence)
-            TriggerClientEvent(GetCurrentResourceName()..':client:UpdateEvidenceListType', -1, 'blood', bloodEvidence)
-            TriggerClientEvent(GetCurrentResourceName()..':client:UpdateEvidenceListType', -1, 'footprint', footprintEvidence)
         end
-        Wait(Config.DegradeTime * 60000)
     end
 end)

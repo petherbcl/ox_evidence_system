@@ -1,16 +1,17 @@
+lib.locale(Config.Lang)
 --------------------------------------------
 -- VARIABLES
 --------------------------------------------
 local usingCam = false
 local showMarker = false
-
+local currentWeapon
 local timer = {}
 local EvidenceDelay = {
     Evidence = 250,
     Blood = 250,
     Ffootprint = 500,
 }
-
+local globalEvidenceList = {}
 local casingEvidence = {}
 local bulletholeEvidence = {}
 local vehicleFragmentEvidence = {}
@@ -50,29 +51,28 @@ local function DrawMarkerEnt(coords)
 end
 
 
-local function DrawEvidenceMarker(type, evidence)
-    print(type)
-    while not HasStreamedTextureDictLoaded(type) do
+local function DrawEvidenceMarker(evidenceType, evidence)
+    while not HasStreamedTextureDictLoaded(evidenceType) do
         Wait(10)
-        RequestStreamedTextureDict(type, true)
+        RequestStreamedTextureDict(evidenceType, true)
     end
 
     SetDrawOrigin(evidence.coords.x, evidence.coords.y, evidence.coords.z, 0)
-    DrawSprite(type, type, 0, 0, 0.04, 0.055, 0, 255, 255, 255, 255)
+    DrawSprite(evidenceType, evidenceType, 0, 0, 0.04, 0.055, 0, 255, 255, 255, 255)
     if Config.ShowShootersLine and evidence.pedCoords then
         DrawLine(evidence.coords.x, evidence.coords.y, evidence.coords.z, evidence.pedCoords.x, evidence.pedCoords.y, evidence.pedCoords.z, 255, 0, 0, 255)
     end
 end
 
 
-local function WaitEvidence(type, func, ...)
-    if not EvidenceDelay[type] then return end
+local function WaitEvidence(evidenceType, func, ...)
+    if not EvidenceDelay[evidenceType] then return end
 
-    if not timer[type] then
-        timer[type] = true
+    if not timer[evidenceType] then
+        timer[evidenceType] = true
         func(...)
-        Wait(EvidenceDelay[type])
-        timer[type] = false
+        Wait(EvidenceDelay[evidenceType])
+        timer[evidenceType] = false
     end
 end
 
@@ -120,10 +120,24 @@ local function CreateBulletHoleEvidence(weaponUsed, raycastcoords, pedcoords, he
     end
 end
 
-local function CreateBloodEvidence(weaponUsed, victimCoords, pedcoords, currentTime, entityHit)
+local function CreateBloodEvidence(weaponUsed, victimCoords, pedcoords, heading, currentTime, entityHit)
     if victimCoords then
-        local _, groundz = GetGroundZFor_3dCoord(victimCoords.x, victimCoords.y, victimCoords.z, true)
-        local coords = vector3(victimCoords.x, victimCoords.y, groundz)
+        local dx = 0
+        if heading <90 or heading > 270 then
+            dx = math.random(50)/100
+        elseif heading >90 or heading < 270 then
+            dx = -1*math.random(50)/100
+        end
+
+        local dy = 0
+        if heading > 0 and heading < 180 then
+            dy = math.random(50)/100
+        elseif heading > 180 and heading < 360 then
+            dy = -1*math.random(50)/100
+        end
+
+        local _, groundz = GetGroundZFor_3dCoord(victimCoords.x+dx, victimCoords.y+dy, victimCoords.z, true)
+        local coords = vector3(victimCoords.x+dx, victimCoords.y+dy, groundz)
 
         local data = {
             weapon = weaponUsed,
@@ -147,17 +161,17 @@ local function CreateFfootprintEvidence(ped, pedcoords, currentTime)
     TriggerServerEvent(GetCurrentResourceName()..':server:CreateEvidence', 'footprint', data)
 end
 
-local function ShowEvidenceMarker(type, maxDist)
+local function ShowEvidenceMarker(evidenceType, maxDist)
     local list
-    if type == 'casing' then
+    if evidenceType == 'casing' then
         list = casingEvidence
-    elseif type == 'bullethole' then
+    elseif evidenceType == 'bullethole' then
         list = bulletholeEvidence
-    elseif type == 'vehicleFragment' then
+    elseif evidenceType == 'vehicleFragment' then
         list = vehicleFragmentEvidence
-    elseif type == 'blood' then
+    elseif evidenceType == 'blood' then
         list = bloodEvidence
-    elseif type == 'footprint' then
+    elseif evidenceType == 'footprint' then
         list = footprintEvidence
     end
 
@@ -165,12 +179,10 @@ local function ShowEvidenceMarker(type, maxDist)
         CreateThread(function()
             while showMarker do
                 local pos = GetEntityCoords(PlayerPedId(), true)
-                for evidenceId, evidence in pairs(list) do
-                    local dist = #(pos - vector3(evidence.coords))
-                    if dist > 1.1 and dist < maxDist then
-                        DrawEvidenceMarker(type, evidence)
-                    elseif dist < 1.0 then
-
+                for _, evidence in pairs(list) do
+                    local dist = #(pos - vector3(evidence.coords.x, evidence.coords.y, evidence.coords.z))
+                    if dist < maxDist then
+                        DrawEvidenceMarker(evidenceType, evidence)
                     end
                 end
                 Wait(0)
@@ -181,7 +193,7 @@ end
 --------------------------------------------
 -- FUNCTIONS
 --------------------------------------------
-lib.callback.register(GetCurrentResourceName()..':GetVehicleInfo', function(netId)
+lib.callback.register(GetCurrentResourceName()..':client:GetVehicleInfo', function(netId)
     local veh = NetworkGetEntityFromNetworkId(netId)
     if DoesEntityExist(veh) and GetEntityType(veh) == 2 then
         local r, g, b = GetVehicleColor(veh)
@@ -194,6 +206,82 @@ lib.callback.register(GetCurrentResourceName()..':GetVehicleInfo', function(netI
     end
     return nil
 end)
+
+RegisterKeyMapping(GetCurrentResourceName()..'_'..Config.InteractKey, 'Interact with Evidence', "keyboard", Config.InteractKey)
+RegisterCommand(GetCurrentResourceName()..'_'..Config.InteractKey, function()
+    if currentWeapon and PlayerData.job.name == Config.PoliceJob and PlayerData.job.onduty then
+        local canCheck = true
+        if Config.PoliceShowEvidenceWeapomAim and not IsPlayerFreeAiming(PlayerId()) then
+            canCheck = false
+        end
+        if canCheck then
+            local pedCds = GetEntityCoords(PlayerPedId())
+            local maxDist = 2
+            local closestEvidenceId
+            for endevidenceId, evidence in pairs(globalEvidenceList) do
+                local distance = #(pedCds - vector3(evidence.coords.x,evidence.coords.y,evidence.coords.z))
+                if distance < maxDist then
+                    maxDist = distance
+                    closestEvidenceId = endevidenceId
+                end
+            end
+
+            if closestEvidenceId and globalEvidenceList[closestEvidenceId].type ~= 'bullethole' then
+                local evidence = globalEvidenceList[closestEvidenceId]
+                local qualityColor = '#74B816'
+                if evidence.degrade >= Config.DegradeLevel.lowQuality then
+                    qualityColor = '#C92A2A'
+                elseif evidence.degrade >= Config.DegradeLevel.mediumQuality then
+                    qualityColor = '#FF922B'
+                end
+
+                lib.registerContext({
+                    id = 'evidence_'..evidence.type,
+                    title = locale('evidence')..' '..locale(evidence.type),
+                    options = {
+                        {title = locale('evidenceQuality'), readOnly = true, progress = 100-evidence.degrade, colorScheme = qualityColor},
+                        {title = locale('collectEvidence'), arrow = true, onSelect = function ()
+                            if lib.callback.await(GetCurrentResourceName()..':server:CheckHasItem', nil, evidence.type) then
+                                TriggerServerEvent(GetCurrentResourceName()..':server:CollectEvidence', closestEvidenceId)
+
+                                lib.progressCircle({
+                                    duration = 10000,
+                                    label = locale('collectEvidence'),
+                                    useWhileDead = false,
+                                    canCancel = false,
+                                    disable = {
+                                        move = true,
+                                    },
+                                    anim = {
+                                        dict = 'amb@medic@standing@tendtodead@idle_a',
+                                        clip = 'idle_a',
+                                        flag = 1
+                                    },
+                                })
+                            else
+                                lib.notify({
+                                    title = locale('nofitication.missingItemCollectTitle'),
+                                    description = locale('nofitication.missingItemCollectDesc', exports.ox_inventory:Items(Config.EvidenceCollect[evidence.type].itemNeed).label),
+                                    type = 'error'
+                                })
+                            end
+                            
+                        end},
+                    },
+                })
+                lib.showContext('evidence_'..evidence.type)
+            end
+        end
+    end
+end)
+lib.callback.register(GetCurrentResourceName()..':client:Notify', function(type, title, description)
+    lib.notify({
+        title = title,
+        description = description,
+        type = type
+    })
+end)
+
 --------------------------------------------
 -- EVENTS
 --------------------------------------------
@@ -209,19 +297,38 @@ RegisterNetEvent(GetCurrentResourceName()..':client:CreateEvidence', function (e
     elseif evidence.type == 'footprint' then
         footprintEvidence[endevidenceId] = evidence
     end
+    globalEvidenceList[endevidenceId] = evidence
 end)
 
-RegisterNetEvent(GetCurrentResourceName()..':client:UpdateEvidenceListType', function (type, evidenceList)
-    if type == 'casing' then
+RegisterNetEvent(GetCurrentResourceName()..':client:UpdateEvidenceListType', function (evidenceType, evidenceList)
+    if evidenceType == 'casing' then
         casingEvidence = evidenceList
-    elseif type == 'bullethole' then
+    elseif evidenceType == 'bullethole' then
         bulletholeEvidence = evidenceList
-    elseif type == 'vehicleFragment' then
+    elseif evidenceType == 'vehicleFragment' then
         vehicleFragmentEvidence = evidenceList
-    elseif type == 'blood' then
+    elseif evidenceType == 'blood' then
         bloodEvidence = evidenceList
-    elseif type == 'footprint' then
+    elseif evidenceType == 'footprint' then
         footprintEvidence = evidenceList
+    end
+
+    for endevidenceId, evidence in pairs(evidenceList) do
+        globalEvidenceList[endevidenceId] = evidence
+    end
+end)
+
+RegisterNetEvent(GetCurrentResourceName()..':client:DeleteEvidence', function (evidenceType, endevidenceId)
+    if evidenceType == 'casing' then
+        casingEvidence[endevidenceId] = nil
+    elseif evidenceType == 'bullethole' then
+        bulletholeEvidence[endevidenceId] = nil
+    elseif evidenceType == 'vehicleFragment' then
+        vehicleFragmentEvidence[endevidenceId] = nil
+    elseif evidenceType == 'blood' then
+        bloodEvidence[endevidenceId] = nil
+    elseif evidenceType == 'footprint' then
+        footprintEvidence[endevidenceId] = nil
     end
 end)
 
@@ -237,10 +344,9 @@ AddEventHandler('CEventGunShot', function(entities, eventEntity, data)
                 local weaponUsed = exports.ox_inventory:getCurrentWeapon()
                 if not Config.WhitelistWeapon[weaponUsed.hash] then
                     local currentTime = GetGameTimer()
-
                     --DrawMarkerEnt(raycastcoords)
                     CreateCasingEvidence(weaponUsed, eventEntity, currentTime)
-                    CreateBulletHoleEvidence(weaponUsed, raycastcoords, pedcoords, heading, currentTime, entityHit, r, g, b)
+                    CreateBulletHoleEvidence(weaponUsed, raycastcoords, pedcoords, heading, currentTime, entityHit)
                 end
             end
         end
@@ -266,18 +372,20 @@ AddEventHandler('gameEventTriggered',function(name,args)
             local victim, attacker, victimDied, weaponHash, isMelee = args[1], args[2], args[6], args[7], args[12]
             if attacker == cache.ped then
                 if IsPedAPlayer(victim) or Config.BloodNPC then
+                    local pedcoords = GetEntityCoords(attacker)
                     local victimCoords = GetEntityCoords(victim)
+                    local heading = GetEntityHeading(attacker)
                     local weaponUsed = exports.ox_inventory:getCurrentWeapon()
-                    if not Config.WhitelistWeapon[weaponUsed.hash] then
+                    if weaponUsed and not Config.WhitelistWeapon[weaponUsed.hash] then
                         local currentTime = GetGameTimer()
-                        CreateBloodEvidence(weaponUsed, victimCoords, pedcoords, currentTime, victim)
+                        CreateBloodEvidence(weaponUsed, victimCoords, pedcoords, heading, currentTime, victim)
                     end
                 end
             end
         end)
     end
 end)
-local currentWeapon
+
 lib.onCache('weapon', function(value)
     if value == Config.PoliceShowEvidenceWeapom then
         currentWeapon = value
@@ -467,11 +575,10 @@ local function StartCamera()
                         lib.callback.await(GetCurrentResourceName()..':server:CreatePhotoItem', nil, resp.url)
                     end
                 end)
-
-                usingCam = false
-                showMarker = false
                 Wait(100) -- You can adjust the timing if needed
                 ClearTimecycleModifier()
+                usingCam = false
+                showMarker = false
             end
 
             local zoomvalue = (1.0 / (fov_max - fov_min)) * (fov - fov_min)
@@ -510,3 +617,8 @@ RegisterNUICallback('close',function ()
     SetNuiFocus(false,false)
 end)
 
+
+--------------------------------------------
+--------------------------------------------
+--------------------------------------------
+TriggerServerEvent(GetCurrentResourceName()..':server:RequestEvidences')

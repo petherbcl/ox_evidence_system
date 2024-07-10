@@ -14,7 +14,7 @@ dependencies {
 shared_scripts {
 	'@ox_lib/init.lua',
 	'@vrp/lib/utils.lua',
-	'shared/*.lua'
+	'shared/*.lua',
 }
 
 client_scripts {
@@ -30,4 +30,5 @@ server_scripts {
 ui_page "web/index.html"
 files {
 	"web/**.*",
+	'locales/*.json',
 }

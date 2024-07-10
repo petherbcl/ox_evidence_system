@@ -1,0 +1,19 @@
+{
+    "blood": "Sangue",
+    "casing": "Capsula",
+    "bullethole": "Buraco de Bala",
+    "vehicleFragment": "Fragmento de Veiculo",
+    "footprint": "Pegada",
+    "evidence": "Evidencia",
+    "evidenceQuality": "Qualidade da Evidencia",
+    "collectEvidence": "Coletar Evidencia",
+    
+
+    "nofitication":{
+        "missingItemCollectTitle": "Item em falta",
+        "missingItemCollectDesc": "Para coletar a evidencia necessita de %s",
+
+        "cantCollectTitle": "Impossível Coletar",
+        "cantCollectDesc": "Evidencia muito detriorada. Impossível coletar"
+    }
+}

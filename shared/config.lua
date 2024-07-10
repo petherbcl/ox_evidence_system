@@ -1,6 +1,7 @@
 Config = {}
 
 Config.Framework = 'standalone'
+Config.Lang = 'pt-br'
 
 -- THIS WEAPONS DON'T LEAVE EVIDENCE
 Config.WhitelistWeapon = {
@@ -20,13 +21,21 @@ Config.PoliceShowEvidenceWeapomAim = true -- NEED TO AIM WEAPON TO SHOW EVIDENCE
 Config.PoliceEvidenceMaxDist = 5.0 -- MAX DISTANCE TO SHOW EVIDENCE WHEN USING FLASHLIGHT
 
 -- EVIDENCE
+Config.InteractKey = 'E' -- KEY TO INTERACT WITH A EVIDENCE
 Config.BloodNPC = false -- Allow NPC leat blood evidence
 Config.AllowFootprint = false -- Allow Player Footprint evidence
 Config.ShowShootersLine = true -- SHOW SHOT LINE
-Config.DegradeTime = 5 -- EACH MINUTES THE EVIDENCE DEGRADE 1%
+Config.DegradeTime = 28.8 -- EACH MINUTES THE EVIDENCE DEGRADE 1%
 Config.DegradeLevel = {
     lowQuality = 90, -- lowQuality degrade will not be able to connect evidence
     mediumQuality = 50 -- mediumQuality will have 50% change colect evidence
+}
+
+Config.EvidenceCollect = {
+    casing = {itemNeed = 'evidence_casing_bag', itemReceive = 'evidence_casing'},
+    vehicleFragment = {itemNeed = 'evidence_casing_bag', itemReceive = 'evidence_vehfagment'},
+    blood = {itemNeed = 'evidence_swab_stick', itemReceive = 'evidence_bood'},
+    footprint = {itemNeed = 'evidence_fingerprint_kit', itemReceive = 'evidence_footprint'},
 }
 
 -- CAMERA

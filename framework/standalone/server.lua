@@ -123,6 +123,18 @@ lib.callback.register(GetCurrentResourceName()..':standalone:server:GetPlayerBlo
     end
     return nil
 end)
+
+function HasItems(source, item, amount)
+    return exports.ox_inventory:GetItemCount(source, item)>(amount or 0)
+end
+
+function GiveItem(source, item, amount, metadata)
+    vRP.giveInventoryItem(vRP.getUserId(source),item,amount,nil,nil,metadata)
+end
+
+function RemoveItem(source, item, amount)
+    vRP.tryGetInventoryItem(vRP.getUserId(source),item,amount)
+end
 --------------------------------------------
 -- EVENTS
 --------------------------------------------
