@@ -1,0 +1,257 @@
+{
+    "2357": {
+        "casingType": "ammo-9",
+        "identifier": 2,
+        "coords": {
+            "x": -1065.4832763671876,
+            "y": -859.8937377929688,
+            "z": 3.86781215667724
+        },
+        "type": "casing",
+        "serial": "145967RNC795535",
+        "timestamp": 146778,
+        "degrade": 0
+    },
+    "4218": {
+        "casingType": "ammo-9",
+        "identifier": 2,
+        "coords": {
+            "x": -1066.656005859375,
+            "y": -861.4044189453125,
+            "z": 3.86786246299743
+        },
+        "type": "casing",
+        "serial": "145967RNC795535",
+        "timestamp": 144763,
+        "degrade": 0
+    },
+    "7291": {
+        "serial": "145967RNC795535",
+        "melee": false,
+        "identifier": 2,
+        "coords": {
+            "x": -1069.313232421875,
+            "y": -855.91162109375,
+            "z": 3.86731481552124
+        },
+        "type": "blood",
+        "bloodType": 3,
+        "timestamp": 144878,
+        "degrade": 0
+    },
+    "9246": {
+        "casingType": "ammo-9",
+        "identifier": 2,
+        "coords": {
+            "x": -1065.12890625,
+            "y": -860.4683227539063,
+            "z": 3.86787271499633
+        },
+        "type": "casing",
+        "serial": "145967RNC795535",
+        "timestamp": 140161,
+        "degrade": 0
+    },
+    "1962": {
+        "serial": "145967RNC795535",
+        "pedCoords": {
+            "x": -1066.894287109375,
+            "y": -856.5718994140625,
+            "z": 4.86750698089599,
+            "w": 41.52288818359375
+        },
+        "identifier": 2,
+        "coords": {
+            "x": -1071.4439697265626,
+            "y": -850.8599853515625,
+            "z": 3.86840939521789
+        },
+        "type": "bullethole",
+        "bulletType": "ammo-9",
+        "timestamp": 156546,
+        "degrade": 0
+    },
+    "8567": {
+        "serial": "145967RNC795535",
+        "melee": false,
+        "identifier": 2,
+        "coords": {
+            "x": -1069.36572265625,
+            "y": -856.1932373046875,
+            "z": 3.86733293533325
+        },
+        "type": "blood",
+        "bloodType": 3,
+        "timestamp": 146912,
+        "degrade": 0
+    },
+    "7795": {
+        "serial": "145967RNC795535",
+        "pedCoords": {
+            "x": -1066.65478515625,
+            "y": -863.765869140625,
+            "z": 4.86782264709472,
+            "w": 7.80418157577514
+        },
+        "identifier": 2,
+        "coords": {
+            "x": -1068.39453125,
+            "y": -848.1292114257813,
+            "z": 5.83621788024902
+        },
+        "type": "bullethole",
+        "bulletType": "ammo-9",
+        "timestamp": 136578,
+        "degrade": 0
+    },
+    "2650": {
+        "casingType": "ammo-9",
+        "identifier": 2,
+        "coords": {
+            "x": -1066.4290771484376,
+            "y": -854.7593383789063,
+            "z": 3.86739492416381
+        },
+        "type": "casing",
+        "serial": "145967RNC795535",
+        "timestamp": 156546,
+        "degrade": 0
+    },
+    "2439": {
+        "serial": "145967RNC795535",
+        "pedCoords": {
+            "x": -1066.691650390625,
+            "y": -861.6051025390625,
+            "z": 4.86787843704223,
+            "w": 45.39054870605469
+        },
+        "identifier": 2,
+        "coords": {
+            "x": -1075.3165283203126,
+            "y": -852.5585327148438,
+            "z": 4.90197849273681
+        },
+        "type": "bullethole",
+        "bulletType": "ammo-9",
+        "timestamp": 138245,
+        "degrade": 0
+    },
+    "3029": {
+        "degrade": 0,
+        "type": "vehicleFragment",
+        "modelHash": 2046537925,
+        "model": "police",
+        "color": {
+            "b": 255,
+            "r": 255,
+            "g": 255
+        },
+        "identifier": 2,
+        "serial": "145967RNC795535",
+        "coords": {
+            "x": -1062.5506591796876,
+            "y": -854.11376953125,
+            "z": 3.86757063865661
+        },
+        "bulletType": "ammo-9",
+        "timestamp": 153032,
+        "pedCoords": {
+            "x": -1070.43017578125,
+            "y": -858.0870971679688,
+            "z": 4.86743021011352,
+            "w": 299.4145202636719
+        }
+    },
+    "7991": {
+        "casingType": "ammo-9",
+        "identifier": 2,
+        "coords": {
+            "x": -1065.83056640625,
+            "y": -861.5840454101563,
+            "z": 3.8679141998291
+        },
+        "type": "casing",
+        "serial": "145967RNC795535",
+        "timestamp": 142311,
+        "degrade": 0
+    },
+    "6753": {
+        "casingType": "ammo-9",
+        "identifier": 2,
+        "coords": {
+            "x": -1066.0208740234376,
+            "y": -858.94580078125,
+            "z": 3.86771464347839
+        },
+        "type": "casing",
+        "serial": "145967RNC795535",
+        "timestamp": 148746,
+        "degrade": 0
+    },
+    "8739": {
+        "casingType": "ammo-9",
+        "identifier": 2,
+        "coords": {
+            "x": -1070.826416015625,
+            "y": -859.32421875,
+            "z": 3.86747646331787
+        },
+        "type": "casing",
+        "serial": "145967RNC795535",
+        "timestamp": 153032,
+        "degrade": 0
+    },
+    "8473": {
+        "serial": "145967RNC795535",
+        "melee": false,
+        "identifier": 2,
+        "coords": {
+            "x": -1069.4132080078126,
+            "y": -856.0115966796875,
+            "z": 3.86731672286987
+        },
+        "type": "blood",
+        "bloodType": 3,
+        "timestamp": 142427,
+        "degrade": 0
+    },
+    "5783": {
+        "casingType": "ammo-9",
+        "identifier": 2,
+        "coords": {
+            "x": -1065.823974609375,
+            "y": -861.5621948242188,
+            "z": 3.8679130077362
+        },
+        "type": "casing",
+        "serial": "145967RNC795535",
+        "timestamp": 138245,
+        "degrade": 0
+    },
+    "7419": {
+        "degrade": 0,
+        "type": "vehicleFragment",
+        "modelHash": 2046537925,
+        "model": "police",
+        "color": {
+            "b": 255,
+            "r": 255,
+            "g": 255
+        },
+        "identifier": 2,
+        "serial": "145967RNC795535",
+        "coords": {
+            "x": -1062.03955078125,
+            "y": -855.1361083984375,
+            "z": 3.86758756637573
+        },
+        "bulletType": "ammo-9",
+        "timestamp": 148746,
+        "pedCoords": {
+            "x": -1066.40234375,
+            "y": -860.8250732421875,
+            "z": 4.8678274154663,
+            "w": 325.71405029296877
+        }
+    }
+}

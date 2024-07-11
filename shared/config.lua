@@ -27,12 +27,13 @@ Config.AllowFootprint = false -- Allow Player Footprint evidence
 Config.ShowShootersLine = true -- SHOW SHOT LINE
 Config.DegradeTime = 28.8 -- EACH MINUTES THE EVIDENCE DEGRADE 1%
 Config.DegradeLevel = {
-    lowQuality = 90, -- lowQuality degrade will not be able to connect evidence
+    lowQuality = 90, -- lowQuality will have 10% change colect evidence
     mediumQuality = 50 -- mediumQuality will have 50% change colect evidence
 }
 
 Config.EvidenceCollect = {
     casing = {itemNeed = 'evidence_casing_bag', itemReceive = 'evidence_casing'},
+    bullethole = {itemNeed = 'evidence_casing_bag', itemReceive = 'evidence_bullet'},
     vehicleFragment = {itemNeed = 'evidence_casing_bag', itemReceive = 'evidence_vehfagment'},
     blood = {itemNeed = 'evidence_swab_stick', itemReceive = 'evidence_bood'},
     footprint = {itemNeed = 'evidence_fingerprint_kit', itemReceive = 'evidence_footprint'},

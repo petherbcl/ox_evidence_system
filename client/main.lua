@@ -226,7 +226,7 @@ RegisterCommand(GetCurrentResourceName()..'_'..Config.InteractKey, function()
                 end
             end
 
-            if closestEvidenceId and globalEvidenceList[closestEvidenceId].type ~= 'bullethole' then
+            if closestEvidenceId and Config.EvidenceCollect[globalEvidenceList[closestEvidenceId].type] then
                 local evidence = globalEvidenceList[closestEvidenceId]
                 local qualityColor = '#74B816'
                 if evidence.degrade >= Config.DegradeLevel.lowQuality then
@@ -387,40 +387,49 @@ AddEventHandler('gameEventTriggered',function(name,args)
 end)
 
 lib.onCache('weapon', function(value)
-    if value == Config.PoliceShowEvidenceWeapom then
-        currentWeapon = value
-        if PlayerData.job.name == Config.PoliceJob and PlayerData.job.onduty then
-            if Config.PoliceShowEvidenceWeapomAim then
-                CreateThread(function()
-                    while currentWeapon do
-                        if IsPlayerFreeAiming(PlayerId()) then
-                            if showMarker == false then
-                                showMarker = true
-                                ShowEvidenceMarker('casing',Config.PoliceEvidenceMaxDist)
-                                ShowEvidenceMarker('bullethole',Config.PoliceEvidenceMaxDist)
-                                ShowEvidenceMarker('vehicleFragment',Config.PoliceEvidenceMaxDist)
-                                ShowEvidenceMarker('blood',Config.PoliceEvidenceMaxDist)
-                                ShowEvidenceMarker('footprint',Config.PoliceEvidenceMaxDist)
+    currentWeapon = value
+    if currentWeapon then
+        if PlayerData.job.name ~= Config.PoliceJob or (PlayerData.job.name == Config.PoliceJob and not Config.PoliceEvidence) then 
+            TriggerServerEvent(GetCurrentResourceName()..':server:AddFingerprint')
+        end
+        
+        if value == Config.PoliceShowEvidenceWeapom then
+            currentWeapon = value
+            if PlayerData.job.name == Config.PoliceJob and PlayerData.job.onduty then
+                if Config.PoliceShowEvidenceWeapomAim then
+                    CreateThread(function()
+                        while currentWeapon do
+                            if IsPlayerFreeAiming(PlayerId()) then
+                                if showMarker == false then
+                                    showMarker = true
+                                    ShowEvidenceMarker('casing',Config.PoliceEvidenceMaxDist)
+                                    ShowEvidenceMarker('bullethole',Config.PoliceEvidenceMaxDist)
+                                    ShowEvidenceMarker('vehicleFragment',Config.PoliceEvidenceMaxDist)
+                                    ShowEvidenceMarker('blood',Config.PoliceEvidenceMaxDist)
+                                    ShowEvidenceMarker('footprint',Config.PoliceEvidenceMaxDist)
+                                end
+                            else
+                                showMarker = false
                             end
-                        else
-                            showMarker = false
+                            Wait(100)
                         end
-                        Wait(100)
-                    end
-                end)
-            else
-                showMarker = true
-                ShowEvidenceMarker('casing',Config.PoliceEvidenceMaxDist)
-                ShowEvidenceMarker('bullethole',Config.PoliceEvidenceMaxDist)
-                ShowEvidenceMarker('vehicleFragment',Config.PoliceEvidenceMaxDist)
-                ShowEvidenceMarker('blood',Config.PoliceEvidenceMaxDist)
-                ShowEvidenceMarker('footprint',Config.PoliceEvidenceMaxDist)
+                    end)
+                else
+                    showMarker = true
+                    ShowEvidenceMarker('casing',Config.PoliceEvidenceMaxDist)
+                    ShowEvidenceMarker('bullethole',Config.PoliceEvidenceMaxDist)
+                    ShowEvidenceMarker('vehicleFragment',Config.PoliceEvidenceMaxDist)
+                    ShowEvidenceMarker('blood',Config.PoliceEvidenceMaxDist)
+                    ShowEvidenceMarker('footprint',Config.PoliceEvidenceMaxDist)
+                end
             end
+
+            TriggerServerEvent(GetCurrentResourceName()..':server:AddFingerPrint')
         end
     else
         showMarker = false
-        currentWeapon = value
     end
+
 end)
 
 

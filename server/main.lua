@@ -178,7 +178,7 @@ RegisterNetEvent(GetCurrentResourceName()..':server:CollectEvidence',function (e
 
         local ableToCollect = true
         if evidence.degrade >= Config.DegradeLevel.lowQuality then
-            ableToCollect = false
+            ableToCollect = math.random(0,100) > 10
         elseif evidence.degrade >= Config.DegradeLevel.mediumQuality then
             ableToCollect = math.random(0,100) > 50
         end
@@ -223,6 +223,19 @@ RegisterNetEvent(GetCurrentResourceName()..':server:CollectEvidence',function (e
     end
 end)
 
+RegisterNetEvent(GetCurrentResourceName()..':server:AddFingerprint',function()
+    local source = source
+    local identifier = getPlayerIdentifier(source)
+    local slot = exports.ox_inventory:GetCurrentWeapon(source).slot
+    local item_data = exports.ox_inventory:GetSlot(source, slot)
+    local metadata = item_data.metadata and item_data.metadata or {}
+    if not metadata.fingerprint then metadata.fingerprint = {} end
+    if not lib.table.contains(metadata, identifier) then
+        table.insert(metadata, identifier)
+        exports.ox_inventory:SetMetadata(source, slot, metadata)
+    end
+
+end)
 --------------------------------------------
 -- DEGRADE
 --------------------------------------------
