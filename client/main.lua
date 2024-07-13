@@ -9,7 +9,7 @@ local timer = {}
 local EvidenceDelay = {
     Evidence = 250,
     Blood = 250,
-    Ffootprint = 500,
+    Footprint = 1000,
 }
 local globalEvidenceList = {}
 local casingEvidence = {}
@@ -144,6 +144,7 @@ local function CreateBloodEvidence(weaponUsed, victimCoords, pedcoords, heading,
             evidence_coords = coords,
             currentTime = currentTime,
             entityHit = NetworkGetNetworkIdFromEntity(entityHit),
+            entityHitSource = GetPlayerServerId(NetworkGetPlayerIndexFromPed(entityHit)),
             bloodType = getEntityBloodType(entityHit),
         }
 
@@ -151,7 +152,7 @@ local function CreateBloodEvidence(weaponUsed, victimCoords, pedcoords, heading,
     end
 end
 
-local function CreateFfootprintEvidence(ped, pedcoords, currentTime)
+local function CreateFootprintEvidence(ped, pedcoords, currentTime)
     if IsPedSwimming(ped) then return end
     local _, groundz = GetGroundZFor_3dCoord(pedcoords.x, pedcoords.y, pedcoords.z, true)
     local data = {
@@ -242,19 +243,21 @@ RegisterCommand(GetCurrentResourceName()..'_'..Config.InteractKey, function()
                         {title = locale('evidenceQuality'), readOnly = true, progress = 100-evidence.degrade, colorScheme = qualityColor},
                         {title = locale('collectEvidence'), arrow = true, onSelect = function ()
                             if lib.callback.await(GetCurrentResourceName()..':server:CheckHasItem', nil, evidence.type) then
+                                TriggerEvent('ox_inventory:disarm')
                                 TriggerServerEvent(GetCurrentResourceName()..':server:CollectEvidence', closestEvidenceId)
 
                                 lib.progressCircle({
                                     duration = 10000,
                                     label = locale('collectEvidence'),
+                                    position = 'bottom',
                                     useWhileDead = false,
                                     canCancel = false,
                                     disable = {
                                         move = true,
                                     },
                                     anim = {
-                                        dict = 'amb@medic@standing@tendtodead@idle_a',
-                                        clip = 'idle_a',
+                                        dict = Config.AnimCollect[evidence.type].dict,
+                                        clip = Config.AnimCollect[evidence.type].clip,
                                         flag = 1
                                     },
                                 })
@@ -279,6 +282,24 @@ lib.callback.register(GetCurrentResourceName()..':client:Notify', function(type,
         title = title,
         description = description,
         type = type
+    })
+end)
+
+lib.callback.register(GetCurrentResourceName()..':client:ProgressCircle', function(label, anim, clip )
+    lib.progressCircle({
+        duration = 10000,
+        label = label,
+        position = 'bottom',
+        useWhileDead = false,
+        canCancel = false,
+        disable = {
+            move = true,
+        },
+        anim = {
+            dict = anim,
+            clip = clip,
+            flag = 1
+        },
     })
 end)
 
@@ -355,12 +376,12 @@ end)
 
 if Config.AllowFootprint then
     AddEventHandler('CEventFootStepHeard', function(witnesses, eventEntity)
-        WaitEvidence('Ffootprint', function ()
+        WaitEvidence('Footprint', function ()
             if eventEntity == cache.ped then
                 if PlayerData.job.name == Config.PoliceJob and not Config.PoliceEvidence then return end
                 local pedcoords = GetEntityCoords(eventEntity)
                 local currentTime = GetGameTimer()
-                CreateFfootprintEvidence(eventEntity, pedcoords, currentTime)
+                CreateFootprintEvidence(eventEntity, pedcoords, currentTime)
             end
         end)
     end)
@@ -389,10 +410,9 @@ end)
 lib.onCache('weapon', function(value)
     currentWeapon = value
     if currentWeapon then
-        if PlayerData.job.name ~= Config.PoliceJob or (PlayerData.job.name == Config.PoliceJob and not Config.PoliceEvidence) then 
+        if PlayerData.job.name ~= Config.PoliceJob or (PlayerData.job.name == Config.PoliceJob and Config.PoliceEvidence) then 
             TriggerServerEvent(GetCurrentResourceName()..':server:AddFingerprint')
         end
-        
         if value == Config.PoliceShowEvidenceWeapom then
             currentWeapon = value
             if PlayerData.job.name == Config.PoliceJob and PlayerData.job.onduty then

@@ -50,7 +50,7 @@ local function getUserJobs(source, user_id)
     }
 
     for job, job_value in pairs(JobPermisions) do
-        if vRP.hasPermission(user_id, job) or vRP.hasPermission(user_id, job..'Paisana') then
+        if vRP.hasPermission(user_id, job) then
             jobdata.name = job
             jobdata.label = job_value.name
             jobdata.onduty = true

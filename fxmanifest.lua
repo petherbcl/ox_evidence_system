@@ -31,4 +31,5 @@ ui_page "web/index.html"
 files {
 	"web/**.*",
 	'locales/*.json',
+	'server/evidence.json'
 }

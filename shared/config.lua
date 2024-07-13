@@ -27,8 +27,12 @@ Config.AllowFootprint = false -- Allow Player Footprint evidence
 Config.ShowShootersLine = true -- SHOW SHOT LINE
 Config.DegradeTime = 28.8 -- EACH MINUTES THE EVIDENCE DEGRADE 1%
 Config.DegradeLevel = {
-    lowQuality = 90, -- lowQuality will have 10% change colect evidence
-    mediumQuality = 50 -- mediumQuality will have 50% change colect evidence
+    lowQuality = 90, -- lowQuality will display red color on progress bar
+    mediumQuality = 50 -- mediumQuality will display orange color on progress bar
+}
+Config.FingerprintQuality = {
+    lowQuality = 5,  -- lowQuality will have 10% change colect evidence ( ex: weapaon has 5 or more fingerprints)
+    mediumQuality = 3 -- mediumQuality will have 50% change colect evidence
 }
 
 Config.EvidenceCollect = {
@@ -37,6 +41,16 @@ Config.EvidenceCollect = {
     vehicleFragment = {itemNeed = 'evidence_casing_bag', itemReceive = 'evidence_vehfagment'},
     blood = {itemNeed = 'evidence_swab_stick', itemReceive = 'evidence_bood'},
     footprint = {itemNeed = 'evidence_fingerprint_kit', itemReceive = 'evidence_footprint'},
+    fingerprint = {itemNeed = 'evidence_fingerprint_kit', itemReceive = 'evidence_fingerprint'}
+}
+
+Config.AnimCollect = {
+    casing = {dict = 'amb@medic@standing@tendtodead@idle_a', clip = 'idle_a'},
+    bullethole = {dict = 'amb@medic@standing@tendtodead@idle_a', clip = 'idle_a'},
+    vehicleFragment = {dict = 'amb@medic@standing@tendtodead@idle_a', clip = 'idle_a'},
+    blood = {dict = 'amb@medic@standing@tendtodead@idle_a', clip = 'idle_a'},
+    footprint = {dict = 'amb@medic@standing@tendtodead@idle_a', clip = 'idle_a'},
+    fingerprint = {dict = 'amb@prop_human_parking_meter@female@idle_a', clip = 'idle_a_female'},
 }
 
 -- CAMERA

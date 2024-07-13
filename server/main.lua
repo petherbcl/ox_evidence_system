@@ -137,6 +137,7 @@ RegisterNetEvent(GetCurrentResourceName()..':server:CreateEvidence',function (ev
     elseif evidenceType == 'blood' then
         evidence.bloodType = data.bloodType
         evidence.melee = data.weapon.melee==0 and true or false
+        evidence.victimIdentifier = getPlayerIdentifier(data.entityHitSource)
         if data.weapon.metadata and data.weapon.metadata ~= '' then
             evidence.serial = data.weapon.metadata.serial
         end
@@ -176,12 +177,7 @@ RegisterNetEvent(GetCurrentResourceName()..':server:CollectEvidence',function (e
         local evidence = evidenceList[evidenceId]
         RemoveItem(source, Config.EvidenceCollect[evidence.type].itemNeed, 1)
 
-        local ableToCollect = true
-        if evidence.degrade >= Config.DegradeLevel.lowQuality then
-            ableToCollect = math.random(0,100) > 10
-        elseif evidence.degrade >= Config.DegradeLevel.mediumQuality then
-            ableToCollect = math.random(0,100) > 50
-        end
+        local ableToCollect = math.random(0,100) > evidence.degrade
 
         if ableToCollect then
             local metadata = {
@@ -195,6 +191,7 @@ RegisterNetEvent(GetCurrentResourceName()..':server:CollectEvidence',function (e
                 model = evidence.model,
                 model_hash = evidence.modelHash,
                 blood_type = evidence.bloodType,
+                victim_identifier = evidence.victimIdentifier,
                 melee = evidence.melee
             }
             GiveItem(source, Config.EvidenceCollect[evidence.type].itemReceive, 1, metadata)
@@ -230,8 +227,8 @@ RegisterNetEvent(GetCurrentResourceName()..':server:AddFingerprint',function()
     local item_data = exports.ox_inventory:GetSlot(source, slot)
     local metadata = item_data.metadata and item_data.metadata or {}
     if not metadata.fingerprint then metadata.fingerprint = {} end
-    if not lib.table.contains(metadata, identifier) then
-        table.insert(metadata, identifier)
+    if not lib.table.contains(metadata.fingerprint, identifier) then
+        table.insert(metadata.fingerprint, identifier)
         exports.ox_inventory:SetMetadata(source, slot, metadata)
     end
 
@@ -279,4 +276,48 @@ CreateThread(function ()
             end
         end
     end
+end)
+
+--------------------------------------------
+-- EXPORT
+--------------------------------------------
+exports('CollectFingerprint', function (source,slot)
+    local source = source
+    --local identifier = getPlayerIdentifier(source)
+    local item = exports.ox_inventory:GetSlot(source, slot)
+    if item and item.metadata and Config.EvidenceCollect.fingerprint then
+        if exports.ox_inventory:GetItemCount(source, Config.EvidenceCollect.fingerprint.itemNeed)>0 then
+            lib.callback.await(GetCurrentResourceName()..':client:ProgressCircle', source, locale('collectFingerprint'), Config.AnimCollect.fingerprint.dict, Config.AnimCollect.fingerprint.clip)
+
+            local ableToCollect = true
+            if #item.metadata.fingerprint >= Config.FingerprintQuality.lowQuality then
+                ableToCollect = math.random(0,100) > 10
+            elseif #item.metadata.fingerprint >= Config.FingerprintQuality.mediumQuality then
+                ableToCollect = math.random(0,100) > 50
+            end
+
+            if ableToCollect then
+                for _, identifier in pairs(item.metadata.fingerprint) do
+                    if exports.ox_inventory:GetItemCount(source, Config.EvidenceCollect.fingerprint.itemNeed)>0 then
+                        RemoveItem(source, Config.EvidenceCollect.fingerprint.itemNeed, 1)
+                        local metadata = {
+                            timestamp = GetGameTimer(),
+                            identifier = identifier,
+                            weapon_serial = item.metadata.serial,
+                            --bullet_type = evidence.bulletType,
+                            --melee = evidence.melee
+                        }
+                        GiveItem(source, Config.EvidenceCollect.fingerprint.itemReceive, 1, metadata)
+                    else
+                        RemoveItem(source, Config.EvidenceCollect.fingerprint.itemNeed, 1)
+                        lib.callback.await(GetCurrentResourceName()..':client:Notify', source, 'error', locale('nofitication.missingItemCollectTitle'), locale('nofitication.missingItemCollectDesc'))
+                    end
+                end
+
+            else
+                lib.callback.await(GetCurrentResourceName()..':client:Notify', source, 'error', locale('nofitication.cantCollectTitle'), locale('nofitication.cantCollectDesc'))
+            end
+        end
+    end
+
 end)
