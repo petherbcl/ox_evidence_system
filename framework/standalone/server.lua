@@ -146,3 +146,4 @@ end)
 RegisterNetEvent('vRP:updatePerm', function(source,user_id)
     updatePlayerData(source, user_id)
 end)
+
