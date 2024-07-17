@@ -410,7 +410,7 @@ end)
 lib.onCache('weapon', function(value)
     currentWeapon = value
     if currentWeapon then
-        if PlayerData.job.name ~= Config.PoliceJob or (PlayerData.job.name == Config.PoliceJob and Config.PoliceEvidence) then 
+        if PlayerData.job.name ~= Config.PoliceJob or (PlayerData.job.name == Config.PoliceJob and Config.PoliceEvidence) then
             TriggerServerEvent(GetCurrentResourceName()..':server:AddFingerprint')
         end
         if value == Config.PoliceShowEvidenceWeapom then

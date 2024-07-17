@@ -223,15 +223,17 @@ end)
 RegisterNetEvent(GetCurrentResourceName()..':server:AddFingerprint',function()
     local source = source
     local identifier = getPlayerIdentifier(source)
-    local slot = exports.ox_inventory:GetCurrentWeapon(source).slot
-    local item_data = exports.ox_inventory:GetSlot(source, slot)
-    local metadata = item_data.metadata and item_data.metadata or {}
-    if not metadata.fingerprint then metadata.fingerprint = {} end
-    if not lib.table.contains(metadata.fingerprint, identifier) then
-        table.insert(metadata.fingerprint, identifier)
-        exports.ox_inventory:SetMetadata(source, slot, metadata)
+    local weapon = exports.ox_inventory:GetCurrentWeapon(source)
+    if weapon then
+        local slot = weapon.slot
+        local item_data = exports.ox_inventory:GetSlot(source, slot)
+        local metadata = item_data.metadata and item_data.metadata or {}
+        if not metadata.fingerprint then metadata.fingerprint = {} end
+        if not lib.table.contains(metadata.fingerprint, identifier) then
+            table.insert(metadata.fingerprint, identifier)
+            exports.ox_inventory:SetMetadata(source, slot, metadata)
+        end
     end
-
 end)
 --------------------------------------------
 -- DEGRADE
