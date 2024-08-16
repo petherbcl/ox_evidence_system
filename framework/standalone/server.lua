@@ -11,19 +11,19 @@ local JobPermisions = {
     ["DPCNX"] = {
         name = "Dep. Pol. Conexões",
         grades = {
-            [13] = {group="AltoComando", name="Alto Comando"},
-            [12] = {group="Major", name="Major"},
-            [11] = {group="Capitao", name="Capitão"},
-            [10]  = {group="1Tenente", name="1º Tenente"},
-            [9]  = {group="2Tenente", name="2º Tenente"},
-            [8]  = {group="SubTenente", name="SubT enente"},
-            [7]  = {group="1Sargento", name="1º Sargento"},
-            [6]  = {group="2Sargento", name="2º Sargento"},
-            [5]  = {group="3Sargento", name="3º Sargento"},
-            [4]  = {group="Cabo", name="Cabo"},
-            [3]  = {group="1Soldado", name="1º Soldado"},
-            [2]  = {group="2Soldado", name="2º Soldado"},
-            [1]  = {group="Recruta", name="Recruta"},
+            [13] = {group="DPCNX_AltoComando", name="Alto Comando"},
+            [12] = {group="DPCNX_Major", name="Major"},
+            [11] = {group="DPCNX_Capitao", name="Capitão"},
+            [10]  = {group="DPCNX_1Tenente", name="1º Tenente"},
+            [9]  = {group="DPCNX_2Tenente", name="2º Tenente"},
+            [8]  = {group="DPCNX_SubTenente", name="SubT enente"},
+            [7]  = {group="DPCNX_1Sargento", name="1º Sargento"},
+            [6]  = {group="DPCNX_2Sargento", name="2º Sargento"},
+            [5]  = {group="DPCNX_3Sargento", name="3º Sargento"},
+            [4]  = {group="DPCNX_Cabo", name="Cabo"},
+            [3]  = {group="DPCNX_1Soldado", name="1º Soldado"},
+            [2]  = {group="DPCNX_2Soldado", name="2º Soldado"},
+            [1]  = {group="DPCNX_Recruta", name="Recruta"},
         }
     }
 }
