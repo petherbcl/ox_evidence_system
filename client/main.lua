@@ -37,20 +37,6 @@ PlayerData = {
 --------------------------------------------
 -- LOCAL FUNCTIONS
 --------------------------------------------
-local function DrawMarkerEnt(coords)
-    CreateThread(function()
-        while true do
-            DrawMarker(28, coords.x, coords.y, coords.z,0.0, 0.0, 0.0,0.0, 0.0, 0.0,
-                1.0, 1.0, 1.0,
-                0, 171, 255,75,
-                false,false,2,false,0, 0, 0)
-
-            Wait(1)
-        end
-    end)
-end
-
-
 local function DrawEvidenceMarker(evidenceType, evidence)
     while not HasStreamedTextureDictLoaded(evidenceType) do
         Wait(10)
@@ -365,7 +351,6 @@ AddEventHandler('CEventGunShot', function(entities, eventEntity, data)
                 local weaponUsed = exports.ox_inventory:getCurrentWeapon()
                 if not Config.WhitelistWeapon[weaponUsed.hash] then
                     local currentTime = GetGameTimer()
-                    --DrawMarkerEnt(raycastcoords)
                     CreateCasingEvidence(weaponUsed, eventEntity, currentTime)
                     CreateBulletHoleEvidence(weaponUsed, raycastcoords, pedcoords, heading, currentTime, entityHit)
                 end
