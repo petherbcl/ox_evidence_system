@@ -76,7 +76,7 @@ end)
 
 lib.callback.register(GetCurrentResourceName()..':server:CreatePhotoItem', function(source, url)
     local source = source
-    GiveItem(source,Config.photoItem, 1, {url=url, date = os.date('%Y/%m/%d %H:%M:%S'), identification = getPlayerIdentifier(source), description = 'Date: '..os.date('%Y/%m/%d %H:%M:%S')..'\nIdentification: '..getPlayerName(source)})
+    GiveItem(source,Config.photoItem, 1, {url=url, date = os.date('%Y/%m/%d %H:%M:%S'), identification = getPlayerIdentifier(source), description = os.date('%Y/%m/%d %H:%M:%S')})
 end)
 
 lib.callback.register(GetCurrentResourceName()..':server:CheckHasItem', function(source, typeEvidence)

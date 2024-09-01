@@ -11,7 +11,7 @@ local JobPermisions = {
     ["DPCNX"] = {
         name = "Dep. Pol. Conexões",
         grades = {
-            [13] = {group="DPCNX_AltoComando", name="Alto Comando"},
+            [13] = {group="DPCNX_ComandoGeral", name="Comando Geral"},
             [12] = {group="DPCNX_Major", name="Major"},
             [11] = {group="DPCNX_Capitao", name="Capitão"},
             [10]  = {group="DPCNX_1Tenente", name="1º Tenente"},

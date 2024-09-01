@@ -396,7 +396,13 @@ lib.onCache('weapon', function(value)
     currentWeapon = value
     if currentWeapon then
         if PlayerData.job.name ~= Config.PoliceJob or (PlayerData.job.name == Config.PoliceJob and Config.PoliceEvidence) then
-            TriggerServerEvent(GetCurrentResourceName()..':server:AddFingerprint')
+            local gender = 'male'
+            if GetHashKey("mp_f_freemode_01") == GetEntityModel(cache.ped) then
+                gender = 'female'
+            end
+            if Config.armsWithoutGloves[gender][GetPedDrawableVariation(cache.ped,3)] then
+                TriggerServerEvent(GetCurrentResourceName()..':server:AddFingerprint')
+            end
         end
         if value == Config.PoliceShowEvidenceWeapom then
             currentWeapon = value
